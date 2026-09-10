@@ -1,0 +1,11 @@
+Case_ID,Patient_Name,Age,Denial_Code,Diagnosis,Proposed_Treatment,Clinical_Notes
+MD-2026-01,Arjun Mehta,45,ERR-ORTHO,Severe Osteoarthritis of Left Knee,Arthroscopic Meniscectomy,Patient completed 5 months of continuous physical therapy and localized NSAID treatments. X-ray shows advanced joint narrowing.
+MD-2026-02,Priya Sharma,38,ERR-CARDIAC,Atypical Chest Pain & Palpitations,Cardiac MRI with Contrast,Patient presents with exertional dyspnea. Resting EKG indicates left ventricular hypertrophy and ST-segment abnormalities.
+MD-2026-03,Rohan Das,61,ERR-ONCOLOGY,Metastatic Non-Small Cell Lung Cancer,Targeted Immunotherapy (Pembrolizumab),Biopsy confirms Stage IV adenocarcinoma. Companion diagnostic genetic panel validates high PD-L1 expression (>50%).
+MD-2026-04,Ananya Iyer,52,ERR-ORTHO,Advanced Left Hip Labral Tear,Hip Arthroscopy,Patient attempted yoga and acupuncture for 2 weeks. Did not complete any formal clinical physical therapy regimen.
+MD-2026-05,Vikram Malhotra,29,ERR-CARDIAC,Acute Palpitations,Stress Echocardiogram,Patient has clean resting EKG. Chest pain resolved with rest. No previous history of cardiovascular anomalies.
+MD-2026-06,Meera Nair,58,ERR-ONCOLOGY,Advanced Right Breast Adenocarcinoma,Trastuzumab targeted therapy,Immunohistochemistry (IHC) profiling reports HER2-negative mutation status. No expression detected.
+MD-2026-07,Kabir Joshi,47,ERR-ORTHO,Chronic Right Rotator Cuff Tear,Shoulder Arthroscopic Repair,Patient chart confirms 6 continuous months of targeted rotator cuff physical therapy exercises under Dr. Kapoor.
+MD-2026-08,Sneha Reddy,34,ERR-CARDIAC,Recurrent Syncope & Dyspnea,Cardiac MRI,Patient reports 3 syncopal episodes. Holter monitor and resting EKG reveal profound baseline sinus bradycardia and T-wave inversions.
+MD-2026-09,Amit Verma,65,ERR-ONCOLOGY,Metastatic Colorectal Carcinoma,Cetuximab targeted therapy,Genetic typing report confirms wild-type KRAS/NRAS status with no detectable downstream mutation blockages.
+MD-2026-10,Zara Khan,41,ERR-ORTHO,Degenerative Medial Meniscus Tear,Knee Meniscal Debridement,Patient log indicates 1 month of occasional home stretches. No formal documented consecutive clinical physical therapy.
