@@ -1,0 +1,114 @@
+================================================================================
+  UNIFIED MEDICAL INSURANCE POLICY COVERAGE RULES
+  Issuing Authority : National Health Claims Adjudication Bureau (NHCAB)
+  Document Version  : 4.1.2 | Effective Date: 01-JAN-2026
+  Classification    : INTERNAL USE — CLAIMS ADJUDICATION REFERENCE
+================================================================================
+
+SECTION 1 — CARDIAC DIAGNOSTIC IMAGING
+---------------------------------------
+Policy Rule ID  : ACC-901
+Procedure Group : Advanced Cardiac Diagnostic Imaging
+Covered Service : Cardiac Magnetic Resonance Imaging (Cardiac MRI), Cardiac CT
+                  Angiography, Myocardial Perfusion Imaging
+
+COVERAGE CRITERIA (ALL conditions must be met simultaneously):
+  [C1] Patient must have a documented clinical diagnosis of ATYPICAL CHEST PAIN
+       recorded by a licensed cardiologist or attending physician in the medical
+       chart prior to the date of service.
+  [C2] A resting Electrocardiogram (EKG / ECG) performed within 90 days of the
+       requested service must show one or more ABNORMAL findings, including but
+       not limited to: ST-segment depression or elevation, T-wave inversion,
+       left ventricular hypertrophy (LVH), bundle branch block, pathological Q
+       waves, sinus bradycardia, or other rhythm/conduction abnormalities.
+
+NON-COVERAGE TRIGGERS:
+  - Normal resting EKG with no documented arrhythmia or conduction defect.
+  - Chest pain classified as TYPICAL (musculoskeletal or GERD-related) without
+    cardiologist attestation of atypical origin.
+  - Absence of prior resting EKG result in the patient's clinical record.
+
+DENIAL CODE : ERR-CARDIAC
+APPEAL BASIS : Submit updated EKG report with cardiologist attestation letter
+               confirming atypical chest pain classification. Peer-to-peer review
+               with a board-certified cardiologist may be requested.
+
+--------------------------------------------------------------------------------
+
+SECTION 2 — ORTHOPAEDIC SURGICAL PROCEDURES
+--------------------------------------------
+Policy Rule ID  : ORTHO-404
+Procedure Group : Arthroscopic Surgical Interventions
+Covered Service : Arthroscopic procedures of the knee (meniscectomy, ACL repair,
+                  chondroplasty), hip (labral repair, femoroacetabular impingement
+                  correction), and shoulder (rotator cuff repair, SLAP repair,
+                  subacromial decompression)
+
+COVERAGE CRITERIA (ALL conditions must be met simultaneously):
+  [C1] Patient must have completed a MINIMUM of FOUR (4) CONSECUTIVE CALENDAR
+       MONTHS of conservative, clinically supervised therapy. Qualifying therapies
+       include: formal Physical Therapy (PT) sessions with a licensed physiotherapist
+       OR documented intra-articular corticosteroid / hyaluronic acid injections
+       administered by a physician.
+  [C2] Conservative therapy participation must be CONTINUOUSLY DOCUMENTED in the
+       official Electronic Health Record (EHR) system. Home exercise programs,
+       informal stretching, yoga, acupuncture, or over-the-counter NSAID use
+       without formal clinical documentation do NOT satisfy this requirement.
+  [C3] Imaging evidence (X-Ray, MRI, or CT scan) must confirm structural pathology
+       consistent with the proposed surgical intervention.
+
+NON-COVERAGE TRIGGERS:
+  - Conservative therapy duration is less than 4 continuous months.
+  - Documentation gaps or reliance solely on home/informal remedies.
+  - Lack of imaging confirming structural pathology.
+
+DENIAL CODE : ERR-ORTHO
+APPEAL BASIS : Provide complete physiotherapy attendance logs, physician notes
+               documenting clinical injections, and updated imaging reports. An
+               independent medical examination (IME) may be ordered.
+
+--------------------------------------------------------------------------------
+
+SECTION 3 — ONCOLOGY TARGETED THERAPY & IMMUNOTHERAPY
+------------------------------------------------------
+Policy Rule ID  : ONCO-202
+Procedure Group : Targeted Molecular Therapy & Immune Checkpoint Inhibitor Therapy
+Covered Service : All FDA-approved targeted therapy agents (e.g., Trastuzumab,
+                  Cetuximab, Vemurafenib, Osimertinib) and immune checkpoint
+                  inhibitors (e.g., Pembrolizumab, Nivolumab, Atezolizumab)
+
+COVERAGE CRITERIA (ALL conditions must be met simultaneously):
+  [C1] A COMPANION DIAGNOSTIC GENETIC TEST must have been performed on a biopsy
+       sample from the patient's primary or metastatic tumour. Acceptable tests
+       include: Next-Generation Sequencing (NGS) panels, Fluorescence In Situ
+       Hybridization (FISH), Immunohistochemistry (IHC), or polymerase chain
+       reaction (PCR)-based mutation assays.
+  [C2] The test result must CONFIRM THE PRESENCE of the SPECIFIC BIOMARKER
+       MUTATION or expression level for which the requested agent is indicated.
+       Examples:
+         - Pembrolizumab / Nivolumab : PD-L1 expression score >= 1% (TPS or CPS);
+           high TMB (>= 10 mut/Mb) also qualifies.
+         - Trastuzumab               : HER2-POSITIVE status (IHC 3+ or FISH ratio >= 2.0).
+         - Cetuximab / Panitumumab   : RAS/KRAS/NRAS WILD-TYPE (mutation-FREE) confirmed.
+         - Vemurafenib / Dabrafenib  : BRAF V600E/K mutation CONFIRMED.
+         - Osimertinib               : EGFR exon 19 deletion or L858R mutation CONFIRMED.
+  [C3] The oncology treatment plan must be co-signed by a board-certified medical
+       oncologist and the treatment must be consistent with NCCN Clinical Practice
+       Guidelines (Category 1 or 2A evidence).
+
+NON-COVERAGE TRIGGERS:
+  - No companion diagnostic test on file prior to treatment initiation.
+  - Biomarker test result is NEGATIVE or ABSENT for the targeted agent's required
+    marker (e.g., HER2-negative for Trastuzumab; KRAS-mutated for Cetuximab;
+    PD-L1 < 1% for Pembrolizumab without TMB qualification).
+  - Use of an agent outside its FDA-approved biomarker indication.
+
+DENIAL CODE : ERR-ONCOLOGY
+APPEAL BASIS : Submit full pathology report with companion diagnostic results,
+               oncologist co-signature, and NCCN guideline citation supporting
+               off-label or alternate-biomarker use. Tumour Board minutes may
+               be submitted as supplemental clinical evidence.
+
+================================================================================
+END OF POLICY DOCUMENT — NHCAB-UIPCR-v4.1.2
+================================================================================
