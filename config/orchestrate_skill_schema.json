@@ -1,0 +1,367 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Automated Medical Insurance Claim Denial & Appeals Agent",
+    "description": "IBM watsonx Orchestrate Skill Schema — Problem Statement No. 38, Edunet Foundation IBM SkillsBuild Training. This multi-agent skill automates end-to-end insurance claim denial review and appeal drafting using a sequential three-agent pipeline: PolicyAuditAgent → ClinicalEvidenceAgent → AppealStrategyAgent.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Edunet Foundation IBM SkillsBuild — Student Submission",
+      "url": "https://edunetfoundation.org"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.claims-agent.internal/v1",
+      "description": "Production orchestration endpoint (internal)"
+    },
+    {
+      "url": "https://sandbox.claims-agent.internal/v1",
+      "description": "Sandbox / test environment"
+    }
+  ],
+  "tags": [
+    {
+      "name": "policy-audit",
+      "description": "Agent 1 — Map denial code to governing policy rule"
+    },
+    {
+      "name": "clinical-evidence",
+      "description": "Agent 2 — Evaluate clinical notes against policy criteria"
+    },
+    {
+      "name": "appeal-strategy",
+      "description": "Agent 3 — Draft formal appeal letter or uphold denial"
+    },
+    {
+      "name": "pipeline",
+      "description": "Full sequential multi-agent pipeline (all three agents)"
+    }
+  ],
+  "paths": {
+    "/pipeline/process-batch": {
+      "post": {
+        "operationId": "processDenialBatch",
+        "summary": "Run the full three-agent pipeline on a batch of denial records",
+        "description": "Accepts a list of insurance denial records, processes each through PolicyAuditAgent → ClinicalEvidenceAgent → AppealStrategyAgent, and returns structured dispositions plus an executive scorecard.",
+        "tags": ["pipeline"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DenialBatchRequest"
+              },
+              "example": {
+                "records": [
+                  {
+                    "case_id": "MD-2026-01",
+                    "patient_name": "Arjun Mehta",
+                    "age": 45,
+                    "denial_code": "ERR-ORTHO",
+                    "diagnosis": "Severe Osteoarthritis of Left Knee",
+                    "proposed_treatment": "Arthroscopic Meniscectomy",
+                    "clinical_notes": "Patient completed 5 months of continuous physical therapy and localized NSAID treatments. X-ray shows advanced joint narrowing."
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineBatchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Unrecognised denial code",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal pipeline error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/policy-audit": {
+      "post": {
+        "operationId": "runPolicyAuditAgent",
+        "summary": "Agent 1 — Identify governing policy rule from a denial code",
+        "description": "Accepts a denial code (e.g. ERR-ORTHO) and returns the matching policy rule ID, rule title, coverage criteria, and relevant policy document excerpt.",
+        "tags": ["policy-audit"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyAuditRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Policy audit result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PolicyAuditResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Denial code not found in policy registry",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/clinical-evidence": {
+      "post": {
+        "operationId": "runClinicalEvidenceAgent",
+        "summary": "Agent 2 — Evaluate clinical notes against policy criteria",
+        "description": "Scans clinical notes using rule-based NLP patterns to determine whether the patient's documented clinical evidence satisfies the governing policy rule criteria for the given denial code.",
+        "tags": ["clinical-evidence"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ClinicalEvidenceRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Clinical evidence evaluation result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ClinicalEvidenceResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/appeal-strategy": {
+      "post": {
+        "operationId": "runAppealStrategyAgent",
+        "summary": "Agent 3 — Draft formal appeal letter or uphold denial",
+        "description": "Given a patient record, a policy audit result, and a clinical evidence evaluation, produces a final disposition (SUCCESS_PROBABLE or DENIAL_UPHELD) and either a structured appeal letter or a manual-review notice.",
+        "tags": ["appeal-strategy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AppealStrategyRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appeal strategy result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AppealStrategyResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/scorecard": {
+      "get": {
+        "operationId": "getExecutiveScorecard",
+        "summary": "Retrieve the executive scorecard for the last pipeline run",
+        "description": "Returns aggregate statistics from the most recently completed batch pipeline run: total cases, appeals filed, denials upheld, and automation rate.",
+        "tags": ["pipeline"],
+        "responses": {
+          "200": {
+            "description": "Executive scorecard",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ExecutiveScorecard" }
+              }
+            }
+          },
+          "404": {
+            "description": "No pipeline run found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DenialRecord": {
+        "type": "object",
+        "required": ["case_id", "patient_name", "age", "denial_code", "diagnosis", "proposed_treatment", "clinical_notes"],
+        "properties": {
+          "case_id":            { "type": "string",  "example": "MD-2026-01",                        "description": "Unique claim case identifier" },
+          "patient_name":       { "type": "string",  "example": "Arjun Mehta",                       "description": "Full legal name of the patient" },
+          "age":                { "type": "integer", "example": 45, "minimum": 0, "maximum": 130,    "description": "Patient age in years" },
+          "denial_code":        { "type": "string",  "example": "ERR-ORTHO",                         "description": "Standardised denial code from the policy registry", "enum": ["ERR-CARDIAC", "ERR-ORTHO", "ERR-ONCOLOGY"] },
+          "diagnosis":          { "type": "string",  "example": "Severe Osteoarthritis of Left Knee","description": "Primary clinical diagnosis" },
+          "proposed_treatment": { "type": "string",  "example": "Arthroscopic Meniscectomy",         "description": "Treatment or procedure requested" },
+          "clinical_notes":     { "type": "string",  "description": "Free-text clinical notes from the treating physician's record" }
+        }
+      },
+      "DenialBatchRequest": {
+        "type": "object",
+        "required": ["records"],
+        "properties": {
+          "records": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 500,
+            "items": { "$ref": "#/components/schemas/DenialRecord" },
+            "description": "List of denial records to process"
+          }
+        }
+      },
+      "PolicyAuditRequest": {
+        "type": "object",
+        "required": ["denial_code"],
+        "properties": {
+          "denial_code": { "type": "string", "example": "ERR-CARDIAC" }
+        }
+      },
+      "PolicyAuditResponse": {
+        "type": "object",
+        "properties": {
+          "rule_id":     { "type": "string", "example": "ACC-901" },
+          "title":       { "type": "string", "example": "Advanced Cardiac Diagnostic Imaging Coverage" },
+          "criteria":    { "type": "string", "description": "Human-readable coverage criteria that must be satisfied" },
+          "section":     { "type": "string", "example": "SECTION 1 — CARDIAC DIAGNOSTIC IMAGING" },
+          "raw_excerpt": { "type": "string", "description": "Raw excerpt from the policy document" }
+        }
+      },
+      "ClinicalEvidenceRequest": {
+        "type": "object",
+        "required": ["denial_code", "clinical_notes"],
+        "properties": {
+          "denial_code":    { "type": "string", "example": "ERR-ORTHO" },
+          "clinical_notes": { "type": "string" }
+        }
+      },
+      "ClinicalEvidenceResponse": {
+        "type": "object",
+        "properties": {
+          "criteria_met": { "type": "boolean", "description": "True if the clinical notes satisfy all policy criteria" },
+          "confidence":   { "type": "string",  "enum": ["HIGH", "MEDIUM", "LOW"], "description": "Confidence level of the evaluation" },
+          "rationale":    { "type": "string",  "description": "Explanation of the evidence evaluation decision" }
+        }
+      },
+      "AppealStrategyRequest": {
+        "type": "object",
+        "required": ["patient_record", "audit_result", "evidence_result"],
+        "properties": {
+          "patient_record":  { "$ref": "#/components/schemas/DenialRecord" },
+          "audit_result":    { "$ref": "#/components/schemas/PolicyAuditResponse" },
+          "evidence_result": { "$ref": "#/components/schemas/ClinicalEvidenceResponse" }
+        }
+      },
+      "AppealStrategyResponse": {
+        "type": "object",
+        "properties": {
+          "disposition":  { "type": "string",  "example": "SUCCESS_PROBABLE (90%+)", "enum": ["SUCCESS_PROBABLE (90%+)", "DENIAL_UPHELD (Manual Review Required)"] },
+          "confidence":   { "type": "string",  "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "appeal_text":  { "type": "string",  "description": "Full text of the generated appeal letter or manual-review notice" }
+        }
+      },
+      "CaseResult": {
+        "type": "object",
+        "properties": {
+          "case_id":      { "type": "string" },
+          "patient_name": { "type": "string" },
+          "denial_code":  { "type": "string" },
+          "rule_id":      { "type": "string" },
+          "criteria_met": { "type": "boolean" },
+          "disposition":  { "type": "string" },
+          "confidence":   { "type": "string" },
+          "appeal_text":  { "type": "string" }
+        }
+      },
+      "ExecutiveScorecard": {
+        "type": "object",
+        "properties": {
+          "run_timestamp":          { "type": "string", "format": "date-time" },
+          "total_cases_processed":  { "type": "integer" },
+          "appeals_filed":          { "type": "integer" },
+          "denials_upheld":         { "type": "integer" },
+          "automation_rate_pct":    { "type": "number", "format": "float" },
+          "manual_review_reduction_pct": { "type": "number", "format": "float" }
+        }
+      },
+      "PipelineBatchResponse": {
+        "type": "object",
+        "properties": {
+          "scorecard": { "$ref": "#/components/schemas/ExecutiveScorecard" },
+          "results":   {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseResult" }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code":    { "type": "string",  "example": "INVALID_DENIAL_CODE" },
+          "message": { "type": "string",  "example": "Denial code 'ERR-XYZ' is not registered in the policy registry." },
+          "details": { "type": "object",  "additionalProperties": true }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "IBM watsonx Orchestrate IAM token"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-IBM-API-Key"
+      }
+    }
+  },
+  "security": [
+    { "BearerAuth": [] },
+    { "ApiKeyAuth": [] }
+  ]
+}
