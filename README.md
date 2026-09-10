@@ -1,5 +1,5 @@
 # 🏥 Automated Medical Insurance Claim Denial & Appeals Agent
-### **Problem Statement No. 38 — Edunet Foundation IBM SkillsBuild Training**
+### **Problem Statement**
 
 > **Submission Category:** AI-Powered Enterprise Automation | IBM watsonx Orchestrate  
 > **Domain:** Healthcare FinTech / Insurance Claims Intelligence  
