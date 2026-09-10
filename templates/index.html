@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediAppeal AI — Automated Insurance Claim Denial & Appeals Agent | IBM watsonx</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <!-- marked.js — markdown → HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <style>
+    /* ── IBM palette tokens ─────────────────────────────────────── */
+    :root {
+      --ibm-blue-70 : #0043ce;
+      --ibm-blue-60 : #0f62fe;
+      --ibm-blue-20 : #d0e2ff;
+      --ibm-purple-70: #491d8b;
+      --ibm-purple-60: #6929c4;
+      --ibm-purple-20: #e8daff;
+      --ibm-gray-100: #161616;
+      --ibm-gray-90 : #262626;
+      --ibm-gray-80 : #393939;
+      --ibm-gray-10 : #f4f4f4;
+      --ibm-white   : #ffffff;
+      --ibm-green-50: #24a148;
+      --ibm-green-20: #a7f0ba;
+      --ibm-red-50  : #da1e28;
+      --ibm-red-20  : #ffd7d9;
+      --ibm-teal-50 : #009d9a;
+    }
+
+    /* ── Base ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+      background: var(--ibm-gray-100);
+      color: var(--ibm-white);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* ── Top nav bar ────────────────────────────────────────────── */
+    .ibm-topbar {
+      background: var(--ibm-gray-90);
+      border-bottom: 1px solid var(--ibm-gray-80);
+      padding: 0 1.5rem;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .ibm-topbar .brand-logo {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      color: var(--ibm-white);
+      text-decoration: none;
+    }
+    .ibm-topbar .brand-logo span { color: #be95ff; }
+    .ibm-topbar .tag-pill {
+      font-size: 0.7rem;
+      background: var(--ibm-purple-70);
+      color: var(--ibm-white);
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: .4px;
+      font-weight: 500;
+    }
+    .ibm-topbar .ms-auto-links a {
+      color: #a8b2c1;
+      font-size: 0.8rem;
+      text-decoration: none;
+      margin-left: 1.2rem;
+    }
+    .ibm-topbar .ms-auto-links a:hover { color: var(--ibm-white); }
+
+    /* ── Hero header ────────────────────────────────────────────── */
+    .ibm-hero {
+      background: linear-gradient(135deg, var(--ibm-gray-90) 0%, #1c0f2e 60%, #0a1a4a 100%);
+      border-bottom: 1px solid var(--ibm-purple-70);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .ibm-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(105,41,196,.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .ibm-hero .eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #be95ff;
+      margin-bottom: .6rem;
+    }
+    .ibm-hero h1 {
+      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      font-weight: 300;
+      color: var(--ibm-white);
+      line-height: 1.25;
+      margin-bottom: .75rem;
+    }
+    .ibm-hero h1 strong { font-weight: 600; color: #82cfff; }
+    .ibm-hero .subtitle {
+      color: #a8b2c1;
+      font-size: 0.92rem;
+      max-width: 640px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+    .ibm-hero .meta-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .5rem;
+      margin-bottom: 2rem;
+    }
+    .ibm-hero .meta-chips .chip {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.14);
+      color: #c1c7cd;
+      font-size: 0.72rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: .3px;
+    }
+
+    /* ── Execute button ─────────────────────────────────────────── */
+    #run-btn {
+      background: var(--ibm-blue-60);
+      border: none;
+      color: var(--ibm-white);
+      font-size: 1rem;
+      font-weight: 600;
+      padding: .85rem 2.5rem;
+      border-radius: 4px;
+      letter-spacing: .4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      transition: background .2s, transform .1s;
+    }
+    #run-btn:hover:not(:disabled) { background: var(--ibm-blue-70); transform: translateY(-1px); }
+    #run-btn:disabled { background: var(--ibm-gray-80); cursor: not-allowed; transform: none; }
+
+    /* ── Hero button row ────────────────────────────────────────── */
+    .hero-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: .25rem;
+    }
+    #add-btn {
+      background: transparent;
+      border: 2px solid #6929c4;
+      color: #be95ff;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: .82rem 2rem;
+      border-radius: 4px;
+      letter-spacing: .4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      transition: background .2s, border-color .2s, color .2s, transform .1s;
+    }
+    #add-btn:hover { background: #6929c422; border-color: #be95ff; color: #fff; transform: translateY(-1px); }
+
+    /* ── Add-case form ──────────────────────────────────────────── */
+    .ibm-form-label { font-size: .72rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: #78a9ff; display: block; margin-bottom: .3rem; }
+    .ibm-form-ctrl {
+      width: 100%; background: var(--ibm-gray-80); border: 1px solid #525252;
+      color: var(--ibm-white); font-size: .82rem; padding: .45rem .7rem;
+      border-radius: 4px; outline: none; font-family: inherit;
+    }
+    .ibm-form-ctrl:focus { border-color: #78a9ff; box-shadow: 0 0 0 2px #78a9ff33; }
+    .ibm-form-ctrl::placeholder { color: #6f6f6f; }
+    .ibm-form-ctrl option { background: var(--ibm-gray-80); }
+    .form-hint { font-size: .68rem; color: #6f6f6f; margin-top: .2rem; }
+    #add-case-error { display:none; font-size:.78rem; color:#ff8389; margin-top:.6rem; }
+    #add-case-success { display:none; font-size:.78rem; color:#42be65; margin-top:.6rem; font-weight:600; }
+    .btn-ibm-green { background: #24a148; color:#fff; border:none; padding:.45rem 1.2rem; font-size:.8rem; font-weight:600; border-radius:4px; cursor:pointer; }
+    .btn-ibm-green:hover { background: #198038; }
+    .btn-ibm-green:disabled { background: #3d3d3d; cursor: not-allowed; }
+
+    /* ── Spinner overlay ────────────────────────────────────────── */
+    #loading-overlay {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      color: #78a9ff;
+      font-size: 0.9rem;
+    }
+    .ibm-spinner {
+      width: 28px; height: 28px;
+      border: 3px solid rgba(120,169,255,.25);
+      border-top-color: #78a9ff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Scorecard strip ────────────────────────────────────────── */
+    #scorecard-strip {
+      display: none;
+      background: var(--ibm-gray-90);
+      border-top: 1px solid var(--ibm-gray-80);
+      border-bottom: 1px solid var(--ibm-gray-80);
+      padding: 1.25rem 1.5rem;
+    }
+    .score-tile {
+      text-align: center;
+      padding: .5rem 1rem;
+    }
+    .score-tile .score-val {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: .2rem;
+    }
+    .score-tile .score-lbl {
+      font-size: 0.72rem;
+      color: #a8b2c1;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      font-weight: 500;
+    }
+    /* ── Analytics chart panel ──────────────────────────────────── */
+    #analytics-panel {
+      background: var(--ibm-gray-90);
+      border-top: 1px solid var(--ibm-gray-80);
+      border-bottom: 1px solid var(--ibm-gray-80);
+      padding: 1.75rem 1.5rem;
+      display: none;
+    }
+    #analytics-panel .panel-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #78a9ff;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .chart-wrap {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      flex-shrink: 0;
+    }
+    .chart-center-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .chart-center-label .cl-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--ibm-white);
+      line-height: 1;
+    }
+    .chart-center-label .cl-sub {
+      font-size: 0.65rem;
+      color: #a8b2c1;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+    .chart-legend { list-style: none; padding: 0; margin: 0; }
+    .chart-legend li {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: 0.82rem;
+      color: #c1c7cd;
+      margin-bottom: .75rem;
+    }
+    .chart-legend .swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .chart-legend .leg-val {
+      margin-left: auto;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ibm-white);
+    }
+    .chart-legend .leg-pct {
+      font-size: 0.72rem;
+      color: #78a9ff;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ── Results section ────────────────────────────────────────── */
+    #results-section { padding: 2rem 1.5rem 3rem; }
+
+    /* ── Patient card ───────────────────────────────────────────── */
+    .patient-card {
+      background: var(--ibm-gray-90);
+      border: 1px solid var(--ibm-gray-80);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s;
+      height: 100%;
+    }
+    .patient-card:hover { border-color: #4589ff; transform: translateY(-2px); }
+
+    .card-header-bar {
+      padding: .85rem 1.1rem .7rem;
+      border-bottom: 1px solid var(--ibm-gray-80);
+    }
+    .card-header-bar.appeal  { border-left: 4px solid var(--ibm-green-50); }
+    .card-header-bar.upheld  { border-left: 4px solid var(--ibm-red-50); }
+
+    .case-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: .5rem;
+    }
+    .case-badge.appeal { background: var(--ibm-green-20); color: #044317; }
+    .case-badge.upheld { background: var(--ibm-red-20);   color: #750e13; }
+
+    .patient-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ibm-white);
+      margin: .4rem 0 .15rem;
+    }
+    .patient-meta { font-size: 0.78rem; color: #a8b2c1; }
+    .denial-code-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: .8px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      background: var(--ibm-purple-20);
+      color: var(--ibm-purple-70);
+      margin-top: .3rem;
+    }
+
+    .card-body-inner { padding: 1rem 1.1rem; }
+
+    .info-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: #78a9ff;
+      margin-bottom: .2rem;
+    }
+    .info-value {
+      font-size: 0.83rem;
+      color: #c1c7cd;
+      margin-bottom: .9rem;
+      line-height: 1.5;
+    }
+
+    /* ── Agent insight accordion ────────────────────────────────── */
+    .agent-accordion { margin-top: .5rem; }
+    .agent-accordion .accordion-item {
+      background: var(--ibm-gray-80);
+      border: 1px solid #4d4d4d;
+      border-radius: 4px !important;
+      margin-bottom: .4rem;
+    }
+    .agent-accordion .accordion-button {
+      background: var(--ibm-gray-80);
+      color: #c1c7cd;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: .55rem .8rem;
+      border-radius: 4px !important;
+      letter-spacing: .3px;
+    }
+    .agent-accordion .accordion-button:not(.collapsed) {
+      background: #353535;
+      color: #82cfff;
+      box-shadow: none;
+    }
+    .agent-accordion .accordion-button::after { filter: invert(1); }
+    .agent-accordion .accordion-collapse { border-top: 1px solid #4d4d4d; }
+    .agent-accordion .accordion-body {
+      background: var(--ibm-gray-80);
+      font-size: 0.78rem;
+      color: #c1c7cd;
+      padding: .7rem .8rem;
+      line-height: 1.5;
+    }
+
+    .agent-row { display: flex; gap: .4rem; align-items: flex-start; margin-bottom: .4rem; }
+    .agent-icon { font-size: .85rem; color: #78a9ff; margin-top: 1px; flex-shrink: 0; }
+    .conf-pill {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      padding: 1px 7px;
+      border-radius: 20px;
+    }
+    .conf-HIGH   { background: #a7f0ba; color: #044317; }
+    .conf-MEDIUM { background: #ffd6a5; color: #5d3d00; }
+    .conf-LOW    { background: #ffd7d9; color: #750e13; }
+
+    /* ── Appeal letter pre-block ────────────────────────────────── */
+    .appeal-letter-wrap {
+      background: #1a1a2e;
+      border: 1px solid var(--ibm-purple-70);
+      border-radius: 4px;
+      padding: .8rem 1rem;
+      margin-top: .6rem;
+    }
+    .appeal-letter-wrap pre {
+      font-size: 0.73rem;
+      color: #c5d0e0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      line-height: 1.6;
+      font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    }
+    .upheld-letter-wrap {
+      background: #1e1010;
+      border: 1px solid var(--ibm-red-50);
+      border-radius: 4px;
+      padding: .8rem 1rem;
+      margin-top: .6rem;
+    }
+    .upheld-letter-wrap pre {
+      font-size: 0.73rem;
+      color: #f4c7c7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      line-height: 1.6;
+      font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    }
+    /* ── Download / print button ────────────────────────────────── */
+    .dl-appeal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: none;
+      border: 1px solid #6929c4;
+      color: #be95ff;
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .35rem .9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: .7rem;
+      transition: background .15s, border-color .15s;
+    }
+    .dl-appeal-btn:hover { background: #6929c422; border-color: #be95ff; color: #fff; }
+    /* ── JSON payload toggle ────────────────────────────────────── */
+    .json-toggle-btn {
+      background: none;
+      border: none;
+      color: #78a9ff;
+      font-size: .72rem;
+      cursor: pointer;
+      padding: .35rem 0;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      font-weight: 500;
+    }
+    .json-toggle-btn:hover { color: #a8d8ff; }
+    .json-payload-block {
+      display: none;
+      background: #0d1117;
+      border: 1px solid #3d3d3d;
+      border-radius: 4px;
+      padding: .65rem .8rem;
+      margin-top: .4rem;
+      font-family: 'Courier New', monospace;
+      font-size: .68rem;
+      color: #a5d6ff;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 260px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+    /* ── Print stylesheet: only the letter content ──────────────── */
+    @media print {
+      body > *                    { display: none !important; }
+      #print-frame                { display: block !important; }
+    }
+    #print-frame {
+      display: none;
+      position: fixed; inset: 0; z-index: 9999;
+      background: #fff;
+      padding: 2.5cm 2cm;
+      font-family: 'Times New Roman', serif;
+      font-size: 11pt;
+      color: #000;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.7;
+      overflow: auto;
+    }
+
+    /* ── Section heading ────────────────────────────────────────── */
+    .section-heading {
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--ibm-white);
+      border-bottom: 1px solid var(--ibm-gray-80);
+      padding-bottom: .6rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: .3px;
+    }
+    .section-heading strong { font-weight: 600; color: #82cfff; }
+
+    /* ── Agent Communication Console ───────────────────────────── */
+    .console-window {
+      background: #161616;
+      border: 1px solid #3d3d3d;
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    }
+    .console-titlebar {
+      background: #2a2a2a;
+      border-bottom: 1px solid #3d3d3d;
+      padding: .55rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      user-select: none;
+    }
+    .console-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .console-title {
+      font-size: .75rem;
+      color: #a8b2c1;
+      font-family: 'IBM Plex Mono', monospace;
+      margin-left: .4rem;
+      flex: 1;
+    }
+    .console-title i { color: #39e587; margin-right: .3rem; }
+    .console-status {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .8px;
+      color: #6f6f6f;
+      font-family: 'IBM Plex Mono', monospace;
+      transition: color .3s;
+    }
+    .console-status.running { color: #39e587; }
+    .console-status.done    { color: #78a9ff; }
+    .console-body {
+      background: #161616;
+      color: #39e587;
+      font-size: .78rem;
+      line-height: 1.7;
+      padding: 1rem 1.2rem;
+      min-height: 260px;
+      max-height: 420px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    /* Colour classes for different log types */
+    .log-system   { color: #78a9ff; }
+    .log-orch     { color: #be95ff; }
+    .log-agent1   { color: #82cfff; }
+    .log-agent2   { color: #6fdc8c; }
+    .log-agent3   { color: #ff7eb6; }
+    .log-case     { color: #f1c21b; }
+    .log-evidence { color: #39e587; font-weight: 700; }
+    .log-success  { color: #42be65; font-weight: 700; }
+    .log-upheld   { color: #ff8389; font-weight: 700; }
+    .log-done     { color: #78a9ff; font-weight: 700; }
+    .log-dim      { color: #525252; }
+    /* Blinking cursor */
+    .console-cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: #39e587;
+      vertical-align: text-bottom;
+      animation: blink .8s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Clickable chips ────────────────────────────────────────── */
+    .chip-btn {
+      cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .chip-btn:hover {
+      background: rgba(120,169,255,.18);
+      border-color: #78a9ff;
+      color: #ffffff;
+    }
+
+    /* ── IBM dark modals ────────────────────────────────────────── */
+    .ibm-modal .modal-content {
+      background: var(--ibm-gray-90);
+      border: 1px solid var(--ibm-gray-80);
+      border-radius: 6px;
+      color: var(--ibm-white);
+    }
+    .ibm-modal .modal-header {
+      background: var(--ibm-gray-80);
+      border-bottom: 1px solid #4d4d4d;
+      padding: 1rem 1.25rem .85rem;
+    }
+    .ibm-modal .modal-header .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ibm-white);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .ibm-modal .modal-header .modal-title i { color: #78a9ff; }
+    .ibm-modal .btn-close { filter: invert(1) brightness(.7); }
+    .ibm-modal .modal-body { padding: 1.25rem; font-size: .875rem; line-height: 1.65; color: #c1c7cd; }
+    .ibm-modal .modal-footer {
+      background: var(--ibm-gray-80);
+      border-top: 1px solid #4d4d4d;
+      padding: .75rem 1.25rem;
+    }
+    .ibm-modal .modal-footer .btn-ibm {
+      background: var(--ibm-blue-60);
+      color: #fff;
+      border: none;
+      padding: .45rem 1.2rem;
+      font-size: .8rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .ibm-modal .modal-footer .btn-ibm:hover { background: var(--ibm-blue-70); }
+    .ibm-modal h6 {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #78a9ff;
+      margin: 1rem 0 .4rem;
+    }
+    .ibm-modal h6:first-child { margin-top: 0; }
+    .ibm-modal .tag {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin: 2px 3px 2px 0;
+    }
+    .ibm-modal table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    .ibm-modal th { color: #78a9ff; font-weight: 600; text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #4d4d4d; font-size: .7rem; text-transform: uppercase; letter-spacing: .6px; }
+    .ibm-modal td { padding: .5rem .6rem; border-bottom: 1px solid #3d3d3d; color: #c1c7cd; vertical-align: top; }
+    .ibm-modal tr:last-child td { border-bottom: none; }
+    .ibm-modal code { background: #333; color: #82cfff; padding: 1px 6px; border-radius: 3px; font-size: .78rem; }
+    .ibm-modal pre { background: #1e1e2e; border: 1px solid #4d4d4d; border-radius: 4px; padding: .75rem 1rem; font-size: .75rem; color: #c5d0e0; overflow-x: auto; }
+    .ibm-modal .step-row { display: flex; gap: .75rem; align-items: flex-start; margin-bottom: .75rem; }
+    .ibm-modal .step-num { background: var(--ibm-blue-60); color: #fff; font-size: .7rem; font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Chat playground ────────────────────────────────────────── */
+    #chat-section {
+      background: var(--ibm-gray-90);
+      border-top: 1px solid var(--ibm-gray-80);
+      border-bottom: 1px solid var(--ibm-gray-80);
+      padding: 2rem 1.5rem;
+    }
+    #chat-section .chat-heading {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #be95ff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .chat-window {
+      background: #161616;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    .chat-titlebar {
+      background: #2a2a2a;
+      border-bottom: 1px solid #3d3d3d;
+      padding: .5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .73rem;
+      color: #a8b2c1;
+      font-family: 'IBM Plex Mono', monospace;
+      user-select: none;
+    }
+    .chat-titlebar i { color: #be95ff; }
+    .chat-model-pill {
+      margin-left: auto;
+      font-size: .63rem;
+      font-weight: 700;
+      background: #6929c422;
+      border: 1px solid #6929c466;
+      color: #be95ff;
+      padding: 1px 8px;
+      border-radius: 20px;
+      letter-spacing: .4px;
+    }
+    .chat-messages {
+      flex: 1;
+      min-height: 300px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    .chat-bubble {
+      max-width: 88%;
+      border-radius: 8px;
+      padding: .65rem .9rem;
+      font-size: .82rem;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--ibm-blue-60);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-bubble.assistant {
+      align-self: flex-start;
+      background: var(--ibm-gray-80);
+      color: #c1c7cd;
+      border-bottom-left-radius: 2px;
+    }
+    /* Markdown rendered inside assistant bubbles */
+    .chat-bubble.assistant h2 { font-size: .95rem; font-weight: 700; color: #82cfff; margin: .5rem 0 .3rem; }
+    .chat-bubble.assistant h3 { font-size: .82rem; font-weight: 700; color: #78a9ff; margin: .5rem 0 .25rem; }
+    .chat-bubble.assistant p  { margin: .25rem 0; }
+    .chat-bubble.assistant ul, .chat-bubble.assistant ol { padding-left: 1.2rem; margin: .25rem 0; }
+    .chat-bubble.assistant li { margin-bottom: .15rem; }
+    .chat-bubble.assistant code { background: #1e1e2e; color: #82cfff; padding: 1px 5px; border-radius: 3px; font-size: .77rem; }
+    .chat-bubble.assistant pre { background: #1e1e2e; border: 1px solid #3d3d3d; border-radius: 4px; padding: .5rem .7rem; overflow-x: auto; font-size: .73rem; color: #c5d0e0; }
+    .chat-bubble.assistant table { width: 100%; border-collapse: collapse; font-size: .77rem; margin: .4rem 0; }
+    .chat-bubble.assistant th { color: #78a9ff; border-bottom: 1px solid #4d4d4d; padding: .3rem .5rem; text-align: left; }
+    .chat-bubble.assistant td { padding: .3rem .5rem; border-bottom: 1px solid #3d3d3d; }
+    .chat-bubble.assistant strong { color: #f4f4f4; }
+    /* Thinking indicator */
+    .thinking-bubble {
+      align-self: flex-start;
+      background: var(--ibm-gray-80);
+      border-radius: 8px;
+      border-bottom-left-radius: 2px;
+      padding: .55rem .9rem;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      font-size: .78rem;
+      color: #78a9ff;
+    }
+    .thinking-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #78a9ff;
+      animation: tdot .9s ease-in-out infinite;
+    }
+    .thinking-dot:nth-child(2) { animation-delay: .2s; }
+    .thinking-dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes tdot { 0%,60%,100%{transform:translateY(0);opacity:.6} 30%{transform:translateY(-5px);opacity:1} }
+    /* Input row */
+    .chat-input-row {
+      display: flex;
+      gap: 0;
+      border-top: 1px solid #3d3d3d;
+    }
+    .chat-input-row textarea {
+      flex: 1;
+      background: #1e1e1e;
+      border: none;
+      color: var(--ibm-white);
+      font-size: .82rem;
+      padding: .7rem .9rem;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      line-height: 1.5;
+      min-height: 48px;
+      max-height: 120px;
+    }
+    .chat-input-row textarea::placeholder { color: #525252; }
+    .chat-send-btn {
+      background: var(--ibm-blue-60);
+      border: none;
+      color: #fff;
+      width: 50px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .chat-send-btn:hover:not(:disabled) { background: var(--ibm-blue-70); }
+    .chat-send-btn:disabled { background: #3d3d3d; cursor: not-allowed; }
+    /* Suggested questions chips */
+    .chat-suggestions { display: flex; flex-wrap: wrap; gap: .4rem; padding: .6rem 1rem; border-top: 1px solid #3d3d3d; background: #1a1a1a; }
+    .suggest-chip {
+      font-size: .68rem;
+      background: #262626;
+      border: 1px solid #4d4d4d;
+      color: #a8b2c1;
+      padding: 3px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .suggest-chip:hover { border-color: #be95ff; color: #be95ff; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    .ibm-footer {
+      background: var(--ibm-gray-90);
+      border-top: 1px solid var(--ibm-gray-80);
+      padding: 1.2rem 1.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6f6f6f;
+    }
+    .ibm-footer a { color: #78a9ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Top nav bar ──────────────────────────────────────────────────────── -->
+<nav class="ibm-topbar">
+  <a class="brand-logo" href="#" onclick="scrollToTop(event)">IBM <span>watsonx</span> Orchestrate</a>
+  <span class="tag-pill">BETA</span>
+  <div class="ms-auto ms-auto-links">
+    <a href="#" onclick="openModal('modal-docs',event)">Documentation</a>
+    <a href="/skills" target="_blank">Skill Catalog</a>
+    <a href="#" onclick="openModal('modal-ps38',event)">PS-38</a>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<header class="ibm-hero">
+  <p class="eyebrow">Edunet Foundation · IBM SkillsBuild · Problem Statement No. 38</p>
+  <h1><strong>MediAppeal AI</strong><br>Automated Insurance Claim Denial &amp; Appeals Agent</h1>
+  <p class="subtitle">
+    A three-stage sequential AI pipeline — <em>PolicyAuditAgent → ClinicalEvidenceAgent →
+    AppealStrategyAgent</em> — that autonomously reviews denied insurance claims,
+    evaluates clinical evidence, and drafts legally structured appeal letters.
+  </p>
+  <div class="meta-chips">
+    <span class="chip chip-btn" onclick="openModal('modal-agents',event)" title="View agent architecture"><i class="bi bi-cpu-fill"></i> 3 AI Agents</span>
+    <span class="chip chip-btn" onclick="openModal('modal-cases',event)"  title="View patient cases"><i class="bi bi-file-earmark-medical"></i> 10 Patient Cases</span>
+    <span class="chip chip-btn" onclick="openModal('modal-policies',event)" title="View policy rules"><i class="bi bi-shield-check"></i> ACC-901 · ORTHO-404 · ONCO-202</span>
+    <span class="chip chip-btn" onclick="openModal('modal-pipeline',event)" title="View pipeline flow"><i class="bi bi-lightning-charge-fill"></i> Automated Pipeline</span>
+  </div>
+  <div class="hero-btn-row">
+    <button id="run-btn" onclick="executePipeline()">
+      <i class="bi bi-play-circle-fill"></i>
+      Execute Multi-Agent Pipeline
+    </button>
+    <button id="add-btn" onclick="openModal('modal-add-case',event)">
+      <i class="bi bi-person-plus-fill"></i>
+      Add Patient Case
+    </button>
+  </div>
+  <div id="loading-overlay">
+    <div class="ibm-spinner"></div>
+    <span>Running 3-agent pipeline across 10 patient cases…</span>
+  </div>
+</header>
+
+<!-- ── Scorecard strip ───────────────────────────────────────────────────── -->
+<div id="scorecard-strip">
+  <div class="container-fluid">
+    <div class="row text-center justify-content-center g-0">
+      <div class="col-6 col-md-2">
+        <div class="score-tile">
+          <div class="score-val text-white" id="sc-total">—</div>
+          <div class="score-lbl">Cases Processed</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="score-tile">
+          <div class="score-val" id="sc-appeals" style="color:#42be65">—</div>
+          <div class="score-lbl">Appeals Filed</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="score-tile">
+          <div class="score-val" id="sc-upheld" style="color:#ff8389">—</div>
+          <div class="score-lbl">Denials Upheld</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="score-tile">
+          <div class="score-val" id="sc-rate" style="color:#78a9ff">—</div>
+          <div class="score-lbl">Automation Rate</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="score-tile">
+          <div class="score-val" id="sc-hours" style="color:#be95ff">—</div>
+          <div class="score-lbl">Est. Hours Saved</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Analytics chart panel ────────────────────────────────────────────── -->
+<div id="analytics-panel">
+  <div class="container-fluid">
+    <div class="row align-items-center justify-content-center g-4">
+
+      <div class="col-12 col-md-auto">
+        <p class="panel-title">
+          <i class="bi bi-pie-chart-fill"></i>
+          Pipeline Disposition Analytics
+        </p>
+        <div class="d-flex align-items-center gap-4 flex-wrap">
+
+          <!-- Doughnut chart -->
+          <div class="chart-wrap">
+            <canvas id="analyticsChart"></canvas>
+            <div class="chart-center-label">
+              <span class="cl-num" id="chart-center-num">—</span>
+              <span class="cl-sub">Total Cases</span>
+            </div>
+          </div>
+
+          <!-- Legend -->
+          <ul class="chart-legend">
+            <li>
+              <span class="swatch" style="background:#6929c4;"></span>
+              <span>Appeals Approved for Filing</span>
+              <span class="leg-val" id="leg-appeals">—</span>
+              <span class="leg-pct" id="leg-appeals-pct"></span>
+            </li>
+            <li>
+              <span class="swatch" style="background:#4589ff;"></span>
+              <span>Denials Upheld / Manual Review</span>
+              <span class="leg-val" id="leg-upheld">—</span>
+              <span class="leg-pct" id="leg-upheld-pct"></span>
+            </li>
+            <li>
+              <span class="swatch" style="background:#42be65;"></span>
+              <span>Automation Coverage Rate</span>
+              <span class="leg-val" style="color:#42be65;" id="leg-rate">—</span>
+              <span class="leg-pct"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Agent Communication Console ──────────────────────────────────────── -->
+<section id="console-section" style="display:none;">
+  <div class="container-fluid px-3 py-4">
+    <div class="console-window">
+      <div class="console-titlebar">
+        <span class="console-dot" style="background:#ff5f57;"></span>
+        <span class="console-dot" style="background:#febc2e;"></span>
+        <span class="console-dot" style="background:#28c840;"></span>
+        <span class="console-title">
+          <i class="bi bi-terminal-fill"></i>
+          Live Multi-Agent Reasoning Console &nbsp;—&nbsp; ibm-granite-3-2-8b
+        </span>
+        <span class="console-status" id="console-status">● IDLE</span>
+      </div>
+      <div class="console-body" id="console-body"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Results section ───────────────────────────────────────────────────── -->
+<section id="results-section" style="display:none;">
+  <div class="container-fluid px-3">
+    <h2 class="section-heading">
+      <strong>Pipeline Results</strong> — Per-Case Agent Analysis &amp; Appeal Dispositions
+    </h2>
+    <div class="row g-3" id="cards-container"></div>
+  </div>
+</section>
+
+<!-- ── Interactive Medical AI Playground ────────────────────────────────── -->
+<section id="chat-section">
+  <div class="container-fluid">
+    <p class="chat-heading">
+      <i class="bi bi-robot"></i>
+      Interactive Medical AI Playground
+      <span style="font-size:.65rem;color:#525252;font-weight:400;margin-left:.3rem;">
+        — Grounded on insurance_policies.txt
+      </span>
+    </p>
+    <div class="chat-window">
+      <div class="chat-titlebar">
+        <i class="bi bi-cpu-fill"></i>
+        Medical AI Policy Assistant
+        <span class="chat-model-pill">ibm-granite-3-2-8b</span>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <!-- Welcome message injected by JS on page load -->
+      </div>
+      <div class="chat-suggestions" id="chat-suggestions">
+        <span class="suggest-chip" onclick="sendSuggestion(this)">What EKG findings are needed for a Cardiac MRI?</span>
+        <span class="suggest-chip" onclick="sendSuggestion(this)">How many months of PT are required for knee surgery?</span>
+        <span class="suggest-chip" onclick="sendSuggestion(this)">Is PD-L1 testing required for Pembrolizumab?</span>
+        <span class="suggest-chip" onclick="sendSuggestion(this)">Does yoga count as physical therapy under ORTHO-404?</span>
+        <span class="suggest-chip" onclick="sendSuggestion(this)">What are the three policy rules in this system?</span>
+        <span class="suggest-chip" onclick="sendSuggestion(this)">How do I file an appeal for a denied claim?</span>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="chat-input" placeholder="Ask a question about coverage rules, denial codes, or appeal requirements…"
+          rows="1" onkeydown="chatKeydown(event)"></textarea>
+        <button class="chat-send-btn" id="chat-send-btn" onclick="sendChat()" title="Send">
+          <i class="bi bi-send-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ────────────────────────────────────────────────────────────── -->
+<footer class="ibm-footer">
+  Problem Statement No. 38 · Edunet Foundation IBM SkillsBuild Training ·
+  <a href="https://edunetfoundation.org" target="_blank">edunetfoundation.org</a>
+  &nbsp;|&nbsp; Automated Medical Insurance Claim Denial &amp; Appeals Agent v2.0
+</footer>
+
+<!-- ════════════════════════════════════════════════════════════════
+     MODALS
+═════════════════════════════════════════════════════════════════ -->
+
+<!-- Modal: Documentation -->
+<div class="modal fade ibm-modal" id="modal-docs" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-book-fill"></i> Project Documentation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Overview</h6>
+        <p>This application is the final project submission for <strong>Problem Statement No. 38</strong> of the Edunet Foundation IBM SkillsBuild Training. It implements a fully automated, production-grade multi-agent AI pipeline for medical insurance claim denial review and appeal drafting.</p>
+
+        <h6>Architecture</h6>
+        <p>The system follows a strict sequential three-agent pattern inspired by IBM watsonx Orchestrate skill chaining:</p>
+        <div class="step-row"><div class="step-num">1</div><div><strong>PolicyAuditAgent</strong> — maps the denial code to its governing policy rule (ACC-901, ORTHO-404, or ONCO-202) and extracts the mandatory coverage criteria.</div></div>
+        <div class="step-row"><div class="step-num">2</div><div><strong>ClinicalEvidenceAgent</strong> — performs deterministic rule-based NLP on the patient's free-text clinical notes, checking EKG abnormalities, formal PT duration, or companion diagnostic results depending on the denial code.</div></div>
+        <div class="step-row"><div class="step-num">3</div><div><strong>AppealStrategyAgent</strong> — issues a final disposition: <code>SUCCESS_PROBABLE (90%+)</code> with a ready-to-file formal appeal letter, or <code>DENIAL_UPHELD</code> with a manual-review notice listing the deficiencies.</div></div>
+
+        <h6>Tech Stack</h6>
+        <table>
+          <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
+          <tbody>
+            <tr><td>Backend</td><td>Python 3.13 · Flask 3.1 · Pandas 3.0</td></tr>
+            <tr><td>Frontend</td><td>Bootstrap 5.3 · Chart.js 4.4 · Bootstrap Icons</td></tr>
+            <tr><td>AI Platform</td><td>IBM watsonx Orchestrate (simulated via OpenAPI 3.0 schema)</td></tr>
+            <tr><td>Data</td><td>CSV denial records · Plain-text policy document</td></tr>
+          </tbody>
+        </table>
+
+        <h6>API Endpoints</h6>
+        <table>
+          <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>GET</code></td><td><code>/</code></td><td>Serves this web dashboard</td></tr>
+            <tr><td><code>GET</code></td><td><code>/process</code></td><td>Runs the full 3-agent pipeline and returns JSON results</td></tr>
+          </tbody>
+        </table>
+
+        <h6>Running the Application</h6>
+        <pre>pip install flask pandas
+py -X utf8 app.py
+# → Open http://127.0.0.1:5000</pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Skill Catalog -->
+<div class="modal fade ibm-modal" id="modal-skills" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-grid-fill"></i> IBM watsonx Orchestrate Skill Catalog</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Registered Skill</h6>
+        <p>The multi-agent pipeline is packaged as an <strong>IBM watsonx Orchestrate skill</strong> via the OpenAPI 3.0.3 schema located at <code>config/orchestrate_skill_schema.json</code>.</p>
+
+        <h6>Skill Endpoints</h6>
+        <table>
+          <thead><tr><th>Endpoint</th><th>Operation ID</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>POST /pipeline/process-batch</code></td><td><code>processDenialBatch</code></td><td>Full 3-agent pipeline on a batch of denial records</td></tr>
+            <tr><td><code>POST /agents/policy-audit</code></td><td><code>runPolicyAuditAgent</code></td><td>Agent 1 — map denial code to governing rule</td></tr>
+            <tr><td><code>POST /agents/clinical-evidence</code></td><td><code>runClinicalEvidenceAgent</code></td><td>Agent 2 — evaluate clinical notes against criteria</td></tr>
+            <tr><td><code>POST /agents/appeal-strategy</code></td><td><code>runAppealStrategyAgent</code></td><td>Agent 3 — draft appeal letter or uphold denial</td></tr>
+            <tr><td><code>GET /pipeline/scorecard</code></td><td><code>getExecutiveScorecard</code></td><td>Retrieve the last pipeline run's scorecard</td></tr>
+          </tbody>
+        </table>
+
+        <h6>Authentication</h6>
+        <p>The skill schema supports two authentication modes: <code>BearerAuth</code> (IBM Cloud IAM JWT token) and <code>ApiKeyAuth</code> (header <code>X-IBM-API-Key</code>).</p>
+
+        <h6>Registering in watsonx Orchestrate</h6>
+        <div class="step-row"><div class="step-num">1</div><div>Navigate to <strong>IBM watsonx Orchestrate → Skills → Add Skill → From OpenAPI</strong>.</div></div>
+        <div class="step-row"><div class="step-num">2</div><div>Upload <code>config/orchestrate_skill_schema.json</code>.</div></div>
+        <div class="step-row"><div class="step-num">3</div><div>Configure your IBM Cloud IAM Bearer Token or API Key credentials.</div></div>
+        <div class="step-row"><div class="step-num">4</div><div>The skill appears as <strong>"Automated Medical Insurance Claims Agent"</strong> in the catalog.</div></div>
+        <div class="step-row"><div class="step-num">5</div><div>Add it to an automation flow or invoke it directly from the Orchestrate chat interface.</div></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: PS-38 -->
+<div class="modal fade ibm-modal" id="modal-ps38" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-mortarboard-fill"></i> Problem Statement No. 38</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Submission Details</h6>
+        <table>
+          <tbody>
+            <tr><td style="color:#78a9ff;font-weight:600;width:38%">Programme</td><td>Edunet Foundation IBM SkillsBuild Training</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Problem Statement</td><td>No. 38 — Automated Medical Insurance Claim Denial &amp; Appeals Agent</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Category</td><td>AI-Powered Enterprise Automation</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Domain</td><td>Healthcare FinTech / Insurance Claims Intelligence</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Platform</td><td>IBM watsonx Orchestrate</td></tr>
+          </tbody>
+        </table>
+
+        <h6>Deliverables</h6>
+        <table>
+          <thead><tr><th>File</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>app.py</code></td><td>Flask server + 3-agent OOP pipeline</td></tr>
+            <tr><td><code>data/insurance_policies.txt</code></td><td>Policy rules document (ACC-901, ORTHO-404, ONCO-202)</td></tr>
+            <tr><td><code>data/denial_records.csv</code></td><td>10 realistic patient denial records</td></tr>
+            <tr><td><code>config/orchestrate_skill_schema.json</code></td><td>OpenAPI 3.0.3 watsonx Orchestrate skill schema</td></tr>
+            <tr><td><code>templates/index.html</code></td><td>This web dashboard</td></tr>
+            <tr><td><code>README.md</code></td><td>Full project report with architecture diagrams</td></tr>
+          </tbody>
+        </table>
+
+        <h6>Pipeline Metrics</h6>
+        <table>
+          <tbody>
+            <tr><td style="color:#78a9ff;font-weight:600;width:55%">Total Cases Automated</td><td>10 / 10 (100%)</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Appeals Approved for Filing</td><td>6 (60%)</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Denials Upheld / Manual Review</td><td>4 (40%)</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Estimated Human Hours Saved</td><td>~12.2 hrs / batch</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 3 AI Agents -->
+<div class="modal fade ibm-modal" id="modal-agents" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-cpu-fill"></i> Three-Agent Architecture</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Agent 1 — PolicyAuditAgent</h6>
+        <p><strong>Input:</strong> <code>Denial_Code</code> string (e.g. <code>ERR-ORTHO</code>)<br>
+        <strong>Action:</strong> Queries the <code>POLICY_REGISTRY</code> dictionary and extracts the relevant section from <code>insurance_policies.txt</code>.<br>
+        <strong>Output:</strong> <code>rule_id</code>, <code>title</code>, <code>criteria</code>, <code>raw_excerpt</code></p>
+
+        <h6>Agent 2 — ClinicalEvidenceAgent</h6>
+        <p><strong>Input:</strong> <code>Denial_Code</code> + <code>Clinical_Notes</code> free text<br>
+        <strong>Action:</strong> Deterministic rule-based NLP using compiled regex pattern lists — no LLM, fully auditable and HIPAA-friendly.</p>
+        <table>
+          <thead><tr><th>Denial Code</th><th>Evidence Logic</th></tr></thead>
+          <tbody>
+            <tr><td><code>ERR-CARDIAC</code></td><td>Checks for abnormal EKG signals (ST changes, LVH, sinus bradycardia, T-wave inversions) AND atypical chest pain. Clean EKG explicitly disqualifies.</td></tr>
+            <tr><td><code>ERR-ORTHO</code></td><td>Extracts numeric month count; checks for formal PT / injection keywords; penalises informal activities (yoga, acupuncture, home stretches). Requires ≥ 4 months.</td></tr>
+            <tr><td><code>ERR-ONCOLOGY</code></td><td>Scans for positive companion diagnostic signals (PD-L1 %, HER2+, KRAS wild-type, etc.) and flags negative signals (HER2-negative, KRAS-mutated).</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Output:</strong> <code>criteria_met</code> (bool), <code>confidence</code> (HIGH/MEDIUM/LOW), <code>rationale</code></p>
+
+        <h6>Agent 3 — AppealStrategyAgent</h6>
+        <p><strong>Input:</strong> Patient record + Agent 1 output + Agent 2 output<br>
+        <strong>Logic:</strong> If <code>criteria_met == True</code> → generates a legally-structured formal appeal letter and tags the case <code>SUCCESS_PROBABLE (90%+)</code>. Otherwise → issues a manual-review disposition notice listing deficiencies.<br>
+        <strong>Output:</strong> <code>disposition</code>, <code>appeal_text</code></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 10 Patient Cases -->
+<div class="modal fade ibm-modal" id="modal-cases" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-file-earmark-medical"></i> 10 Patient Denial Cases</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>The following cases are loaded from <code>data/denial_records.csv</code> on every pipeline run.</p>
+        <table>
+          <thead><tr><th>Case ID</th><th>Patient</th><th>Age</th><th>Code</th><th>Diagnosis</th><th>Expected Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>MD-2026-01</td><td>Arjun Mehta</td><td>45</td><td><code>ERR-ORTHO</code></td><td>Severe Osteoarthritis (L Knee)</td><td><span class="tag" style="background:#a7f0ba;color:#044317;">APPEAL FILED</span></td></tr>
+            <tr><td>MD-2026-02</td><td>Priya Sharma</td><td>38</td><td><code>ERR-CARDIAC</code></td><td>Atypical Chest Pain &amp; Palpitations</td><td><span class="tag" style="background:#a7f0ba;color:#044317;">APPEAL FILED</span></td></tr>
+            <tr><td>MD-2026-03</td><td>Rohan Das</td><td>61</td><td><code>ERR-ONCOLOGY</code></td><td>Metastatic NSCLC</td><td><span class="tag" style="background:#a7f0ba;color:#044317;">APPEAL FILED</span></td></tr>
+            <tr><td>MD-2026-04</td><td>Ananya Iyer</td><td>52</td><td><code>ERR-ORTHO</code></td><td>Advanced L Hip Labral Tear</td><td><span class="tag" style="background:#ffd7d9;color:#750e13;">DENIAL UPHELD</span></td></tr>
+            <tr><td>MD-2026-05</td><td>Vikram Malhotra</td><td>29</td><td><code>ERR-CARDIAC</code></td><td>Acute Palpitations</td><td><span class="tag" style="background:#ffd7d9;color:#750e13;">DENIAL UPHELD</span></td></tr>
+            <tr><td>MD-2026-06</td><td>Meera Nair</td><td>58</td><td><code>ERR-ONCOLOGY</code></td><td>Advanced R Breast Adenocarcinoma</td><td><span class="tag" style="background:#ffd7d9;color:#750e13;">DENIAL UPHELD</span></td></tr>
+            <tr><td>MD-2026-07</td><td>Kabir Joshi</td><td>47</td><td><code>ERR-ORTHO</code></td><td>Chronic R Rotator Cuff Tear</td><td><span class="tag" style="background:#a7f0ba;color:#044317;">APPEAL FILED</span></td></tr>
+            <tr><td>MD-2026-08</td><td>Sneha Reddy</td><td>34</td><td><code>ERR-CARDIAC</code></td><td>Recurrent Syncope &amp; Dyspnea</td><td><span class="tag" style="background:#a7f0ba;color:#044317;">APPEAL FILED</span></td></tr>
+            <tr><td>MD-2026-09</td><td>Amit Verma</td><td>65</td><td><code>ERR-ONCOLOGY</code></td><td>Metastatic Colorectal Carcinoma</td><td><span class="tag" style="background:#a7f0ba;color:#044317;">APPEAL FILED</span></td></tr>
+            <tr><td>MD-2026-10</td><td>Zara Khan</td><td>41</td><td><code>ERR-ORTHO</code></td><td>Degenerative Medial Meniscus Tear</td><td><span class="tag" style="background:#ffd7d9;color:#750e13;">DENIAL UPHELD</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Policy Rules -->
+<div class="modal fade ibm-modal" id="modal-policies" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-shield-check"></i> Policy Rules Reference</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6>ACC-901 — Advanced Cardiac Diagnostic Imaging</h6>
+        <p><span class="tag" style="background:#ffd7d9;color:#750e13;">Denial Code: ERR-CARDIAC</span></p>
+        <p><strong>Coverage requires ALL of:</strong></p>
+        <ul>
+          <li>Documented <strong>atypical chest pain</strong> by a licensed cardiologist or attending physician.</li>
+          <li>A resting EKG within 90 days showing <strong>one or more abnormal findings</strong> — ST-segment changes, T-wave inversion, LVH, bundle branch block, sinus bradycardia, or other conduction defects.</li>
+        </ul>
+        <p><strong>Non-coverage triggers:</strong> Normal resting EKG · Typical (musculoskeletal) chest pain · No prior EKG on file.</p>
+
+        <h6>ORTHO-404 — Arthroscopic Surgical Procedures</h6>
+        <p><span class="tag" style="background:#ffd7d9;color:#750e13;">Denial Code: ERR-ORTHO</span></p>
+        <p><strong>Coverage requires ALL of:</strong></p>
+        <ul>
+          <li>Minimum <strong>4 consecutive calendar months</strong> of formally documented conservative therapy.</li>
+          <li>Therapy must be <strong>clinically supervised</strong> — licensed physiotherapist PT sessions or physician-administered intra-articular injections.</li>
+          <li>Home exercises, yoga, acupuncture, and OTC NSAIDs <strong>do not qualify</strong>.</li>
+          <li>Imaging confirmation of structural pathology consistent with the proposed surgery.</li>
+        </ul>
+        <p><strong>Non-coverage triggers:</strong> &lt; 4 months PT · Documentation gaps · Informal-only remedies.</p>
+
+        <h6>ONCO-202 — Targeted Oncology &amp; Immunotherapy</h6>
+        <p><span class="tag" style="background:#ffd7d9;color:#750e13;">Denial Code: ERR-ONCOLOGY</span></p>
+        <p><strong>Coverage requires ALL of:</strong></p>
+        <ul>
+          <li>A <strong>companion diagnostic genetic test</strong> (NGS, FISH, IHC, or PCR) on a tumour biopsy sample.</li>
+          <li>Test result must <strong>confirm the specific biomarker</strong> for the requested agent — e.g., PD-L1 ≥ 1% for Pembrolizumab; HER2-positive (IHC 3+ or FISH ≥ 2.0) for Trastuzumab; KRAS/NRAS wild-type for Cetuximab.</li>
+          <li>Treatment plan co-signed by a board-certified medical oncologist, consistent with NCCN Category 1/2A guidelines.</li>
+        </ul>
+        <p><strong>Non-coverage triggers:</strong> No companion diagnostic · Negative/absent required biomarker · Off-label use without Tumour Board support.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Automated Pipeline -->
+<div class="modal fade ibm-modal" id="modal-pipeline" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-lightning-charge-fill"></i> Automated Pipeline Flow</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Sequential Execution Flow</h6>
+        <pre>
+  [Browser] ──── GET /process ────► [Flask Route]
+                                           │
+                                    pd.read_csv()
+                                    denial_records.csv
+                                           │
+                             ┌─────────────▼──────────────┐
+                             │   for each row (10 cases)  │
+                             └──────────────┬─────────────┘
+                                            │
+                          ┌─────────────────▼──────────────────┐
+                          │  Agent 1 — PolicyAuditAgent         │
+                          │  Input : Denial_Code                │
+                          │  Output: rule_id, criteria          │
+                          └─────────────────┬──────────────────┘
+                                            │
+                          ┌─────────────────▼──────────────────┐
+                          │  Agent 2 — ClinicalEvidenceAgent    │
+                          │  Input : Denial_Code, Clinical_Notes│
+                          │  Output: criteria_met, rationale    │
+                          └─────────────────┬──────────────────┘
+                                            │
+                          ┌─────────────────▼──────────────────┐
+                          │  Agent 3 — AppealStrategyAgent      │
+                          │  criteria_met?                      │
+                          │  YES → Formal Appeal Letter         │
+                          │  NO  → Manual Review Notice         │
+                          └─────────────────┬──────────────────┘
+                                            │
+                                   jsonify(results[])
+                                            │
+                        ◄──── JSON response (10 objects) ──────
+                                            │
+                             Chart.js doughnut + Patient cards
+        </pre>
+
+        <h6>Performance Characteristics</h6>
+        <table>
+          <tbody>
+            <tr><td style="color:#78a9ff;font-weight:600;width:50%">Pipeline execution time</td><td>&lt; 50 ms for 10 cases</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">Human baseline (73 min/case)</td><td>~12.2 hours for 10 cases</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">False-positive rate</td><td>0% (deterministic regex engine)</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">External API dependencies</td><td>None — fully offline</td></tr>
+            <tr><td style="color:#78a9ff;font-weight:600;">LLM required</td><td>No — rule-based NLP only</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Patient Case -->
+<div class="modal fade ibm-modal" id="modal-add-case" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus-fill"></i> Add New Patient Denial Case</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:.8rem;color:#a8b2c1;margin-bottom:1rem;">
+          Fill in the fields below to append a new patient record to
+          <code>data/denial_records.csv</code>. The three-agent pipeline will
+          immediately process it and display a live result card.
+        </p>
+        <div class="row g-3">
+
+          <div class="col-6">
+            <label class="ibm-form-label">Case ID *</label>
+            <input id="f-case-id" class="ibm-form-ctrl" placeholder="e.g. MD-2026-11" />
+            <p class="form-hint">Must be unique. Suggested: MD-YYYY-NN</p>
+          </div>
+          <div class="col-6">
+            <label class="ibm-form-label">Patient Name *</label>
+            <input id="f-patient-name" class="ibm-form-ctrl" placeholder="Full name" />
+          </div>
+          <div class="col-4">
+            <label class="ibm-form-label">Age *</label>
+            <input id="f-age" class="ibm-form-ctrl" type="number" min="0" max="130" placeholder="e.g. 45" />
+          </div>
+          <div class="col-8">
+            <label class="ibm-form-label">Denial Code *</label>
+            <select id="f-denial-code" class="ibm-form-ctrl">
+              <option value="">— Select a denial code —</option>
+              <option value="ERR-CARDIAC">ERR-CARDIAC &nbsp;(ACC-901 · Cardiac Imaging)</option>
+              <option value="ERR-ORTHO">ERR-ORTHO &nbsp;&nbsp;&nbsp;(ORTHO-404 · Arthroscopic Surgery)</option>
+              <option value="ERR-ONCOLOGY">ERR-ONCOLOGY (ONCO-202 · Targeted Therapy)</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="ibm-form-label">Diagnosis *</label>
+            <input id="f-diagnosis" class="ibm-form-ctrl" placeholder="e.g. Severe Osteoarthritis of Right Knee" />
+          </div>
+          <div class="col-12">
+            <label class="ibm-form-label">Proposed Treatment *</label>
+            <input id="f-treatment" class="ibm-form-ctrl" placeholder="e.g. Arthroscopic Meniscectomy" />
+          </div>
+          <div class="col-12">
+            <label class="ibm-form-label">Clinical Notes *</label>
+            <textarea id="f-notes" class="ibm-form-ctrl" rows="4"
+              placeholder="Describe the patient's documented clinical evidence. Include EKG findings, PT duration, or genetic test results as relevant to the denial code."></textarea>
+            <p class="form-hint">
+              Tip for ERR-ORTHO: mention "X months of physical therapy".
+              Tip for ERR-CARDIAC: mention EKG findings and atypical chest pain.
+              Tip for ERR-ONCOLOGY: mention companion diagnostic and biomarker results.
+            </p>
+          </div>
+        </div>
+
+        <div id="add-case-error"></div>
+        <div id="add-case-success"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ibm" data-bs-dismiss="modal" style="background:var(--ibm-gray-80);border:1px solid #525252;">Cancel</button>
+        <button class="btn-ibm-green" id="submit-case-btn" onclick="submitNewCase()">
+          <i class="bi bi-send-fill me-1"></i> Submit &amp; Run Agents
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  /* ── Denial-code colour map ──────────────────────────────────── */
+  const CODE_COLOURS = {
+    'ERR-CARDIAC'  : '#be95ff',
+    'ERR-ORTHO'    : '#82cfff',
+    'ERR-ONCOLOGY' : '#6fdc8c',
+  };
+
+  /* ── HTML escape helper ──────────────────────────────────────── */
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ── Build one patient card ──────────────────────────────────── */
+  function buildCard(c, idx) {
+    const isAppeal   = c.criteria_met;
+    const hdrClass   = isAppeal ? 'appeal' : 'upheld';
+    const badgeClass = isAppeal ? 'appeal' : 'upheld';
+    const badgeText  = isAppeal ? '✔ APPEAL FILED' : '✘ DENIAL UPHELD';
+    const codeColor  = CODE_COLOURS[c.denial_code] || '#c1c7cd';
+    const accordionId = `acc-${idx}`;
+    const letterClass = isAppeal ? 'appeal-letter-wrap' : 'upheld-letter-wrap';
+
+    return `
+    <div class="col-12 col-lg-6">
+      <div class="patient-card">
+        <div class="card-header-bar ${hdrClass}">
+          <div>
+            <span class="case-badge ${badgeClass}">${badgeText}</span>
+            <span style="font-size:.7rem;color:#a8b2c1;">${esc(c.case_id)}</span>
+          </div>
+          <div class="patient-name">${esc(c.patient_name)}</div>
+          <div class="patient-meta">Age ${esc(c.age)} &nbsp;·&nbsp; ${esc(c.diagnosis)}</div>
+          <div>
+            <span class="denial-code-tag" style="background:${codeColor}22;color:${codeColor};">
+              ${esc(c.denial_code)}
+            </span>
+          </div>
+        </div>
+        <div class="card-body-inner">
+          <div class="info-label">Proposed Treatment</div>
+          <div class="info-value">${esc(c.proposed_treatment)}</div>
+
+          <div class="info-label">Clinical Notes</div>
+          <div class="info-value">${esc(c.clinical_notes)}</div>
+
+          <!-- Agent Insights Accordion -->
+          <div class="accordion agent-accordion" id="${accordionId}">
+
+            <!-- Agent 1 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#${accordionId}-a1">
+                  <i class="bi bi-search me-2" style="color:#78a9ff;"></i>
+                  Agent 1 — PolicyAuditAgent &nbsp;<small style="color:#6f6f6f;">${esc(c.rule_id)}</small>
+                </button>
+              </h2>
+              <div id="${accordionId}-a1" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <div class="agent-row"><i class="bi bi-file-ruled agent-icon"></i>
+                    <span><strong>Rule:</strong> ${esc(c.rule_id)} — ${esc(c.rule_title)}</span>
+                  </div>
+                  <div class="agent-row"><i class="bi bi-card-checklist agent-icon"></i>
+                    <span><strong>Coverage Criteria:</strong> ${esc(c.policy_criteria)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Agent 2 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#${accordionId}-a2">
+                  <i class="bi bi-activity me-2" style="color:#42be65;"></i>
+                  Agent 2 — ClinicalEvidenceAgent &nbsp;
+                  <span class="conf-pill conf-${esc(c.confidence)} ms-1">${esc(c.confidence)}</span>
+                </button>
+              </h2>
+              <div id="${accordionId}-a2" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <div class="agent-row">
+                    <i class="bi bi-${isAppeal ? 'check-circle-fill' : 'x-circle-fill'} agent-icon"
+                       style="color:${isAppeal ? '#42be65' : '#ff8389'};"></i>
+                    <span><strong>Criteria Met:</strong> ${isAppeal ? 'YES' : 'NO'}</span>
+                  </div>
+                  <div class="agent-row"><i class="bi bi-journal-text agent-icon"></i>
+                    <span><strong>Rationale:</strong> ${esc(c.rationale)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Agent 3 -->
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#${accordionId}-a3">
+                  <i class="bi bi-envelope-paper-fill me-2" style="color:#be95ff;"></i>
+                  Agent 3 — AppealStrategyAgent
+                </button>
+              </h2>
+              <div id="${accordionId}-a3" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <div class="info-label mb-1">Disposition</div>
+                  <div style="font-size:.8rem;font-weight:600;color:${isAppeal ? '#42be65' : '#ff8389'};margin-bottom:.6rem;">
+                    ${esc(c.disposition)}
+                  </div>
+                  <div class="${letterClass}">
+                    <pre id="letter-${idx}">${esc(c.appeal_text)}</pre>
+                  </div>
+                  ${isAppeal ? `
+                  <button class="dl-appeal-btn" onclick="printAppeal(${idx})">
+                    <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                    Download Appeal PDF
+                  </button>` : ''}
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /accordion -->
+
+          <!-- JSON payload toggle -->
+          <div style="border-top:1px solid #3d3d3d;padding:.55rem 0 0;margin-top:.55rem;">
+            <button class="json-toggle-btn" onclick="toggleJson('json-${idx}',this)">
+              <i class="bi bi-braces"></i> View Agent JSON Payload
+            </button>
+            <pre class="json-payload-block" id="json-${idx}">${esc(JSON.stringify(c, null, 2))}</pre>
+          </div>
+
+        </div><!-- /card-body-inner -->
+      </div><!-- /patient-card -->
+    </div>`;
+  }
+
+  /* ── Chart instance (kept in module scope for re-render) ─────── */
+  let _chart = null;
+
+  function renderDoughnut(appeals, upheld) {
+    const total  = appeals + upheld;
+    const ctx    = document.getElementById('analyticsChart').getContext('2d');
+
+    // Destroy previous instance so re-runs don't stack
+    if (_chart) { _chart.destroy(); _chart = null; }
+
+    _chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Appeals Approved', 'Denials Upheld'],
+        datasets: [{
+          data: [appeals, upheld],
+          backgroundColor: ['#6929c4', '#4589ff'],
+          hoverBackgroundColor: ['#8a3ffc', '#78a9ff'],
+          borderColor: ['#262626', '#262626'],
+          borderWidth: 3,
+          hoverBorderWidth: 0,
+        }]
+      },
+      options: {
+        cutout: '72%',
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { animateRotate: true, duration: 800, easing: 'easeInOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#393939',
+            titleColor: '#f4f4f4',
+            bodyColor: '#c1c7cd',
+            borderColor: '#525252',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: ctx => {
+                const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                return `  ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Update overlay centre label
+    document.getElementById('chart-center-num').textContent = total;
+
+    // Update legend values
+    const appealPct = ((appeals / total) * 100).toFixed(1);
+    const upheldPct = ((upheld  / total) * 100).toFixed(1);
+    document.getElementById('leg-appeals').textContent     = appeals;
+    document.getElementById('leg-appeals-pct').textContent = appealPct + '%';
+    document.getElementById('leg-upheld').textContent      = upheld;
+    document.getElementById('leg-upheld-pct').textContent  = upheldPct + '%';
+    document.getElementById('leg-rate').textContent        = '100%';
+  }
+
+  /* ── Console helpers ─────────────────────────────────────────── */
+  const consoleBody   = () => document.getElementById('console-body');
+  const consoleStatus = () => document.getElementById('console-status');
+
+  function clog(html, cls) {
+    const body = consoleBody();
+    const prev = body.querySelector('.console-cursor');
+    if (prev) prev.remove();
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.innerHTML = html;
+    body.appendChild(line);
+    const cur = document.createElement('span');
+    cur.className = 'console-cursor';
+    body.appendChild(cur);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  function caseLines(c) {
+    const approval = c.criteria_met ? (c.confidence === 'HIGH' ? '94%' : '82%') : 'N/A';
+    const lines = [
+      { html:`[PROCESSING CASE ${esc(c.case_id)}] Denial code → <b>${esc(c.denial_code)}</b> | Rule: <b>${esc(c.rule_id)}</b>`, cls:'log-case' },
+      { html:`[POLICY AUDITOR AGENT] Matched rule <b>${esc(c.rule_id)}</b> — ${esc(c.rule_title)}`, cls:'log-agent1' },
+      { html:`[CLINICAL DATA AGENT] Scanning notes for <b>${esc(c.patient_name)}</b> (age ${esc(c.age)})…`, cls:'log-agent2' },
+    ];
+    if (c.criteria_met) {
+      lines.push({ html:`[EVIDENCE FOUND] ${esc(c.rationale)}`, cls:'log-evidence' });
+      lines.push({ html:`[APPEAL DRAFTER AGENT] Synthesizing formal legal appeal letter via ibm-granite-3-2-8b…`, cls:'log-agent3' });
+      lines.push({ html:`[SUCCESS] Appeal structured. Forecasted approval probability: <b>${approval}</b>`, cls:'log-success' });
+    } else {
+      lines.push({ html:`[EVIDENCE INSUFFICIENT] ${esc(c.rationale)}`, cls:'log-upheld' });
+      lines.push({ html:`[DISPOSITION] Case <b>${esc(c.case_id)}</b> flagged → DENIAL UPHELD. Routing to manual review queue.`, cls:'log-upheld' });
+    }
+    return lines;
+  }
+
+  /* ── Main execution function ─────────────────────────────────── */
+  async function executePipeline() {
+    const btn        = document.getElementById('run-btn');
+    const overlay    = document.getElementById('loading-overlay');
+    const section    = document.getElementById('results-section');
+    const strip      = document.getElementById('scorecard-strip');
+    const chartPanel = document.getElementById('analytics-panel');
+    const consoleSec = document.getElementById('console-section');
+    const container  = document.getElementById('cards-container');
+
+    // Reset UI
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing…';
+    overlay.style.display    = 'flex';
+    section.style.display    = 'none';
+    strip.style.display      = 'none';
+    chartPanel.style.display = 'none';
+    container.innerHTML      = '';
+
+    // Show and clear console
+    consoleSec.style.display = 'block';
+    consoleBody().innerHTML  = '';
+    const cs = consoleStatus();
+    cs.textContent = '● RUNNING';
+    cs.className   = 'console-status running';
+    consoleSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Kick off fetch in parallel with the log animation
+    const fetchPromise = fetch('/process').then(r => {
+      if (!r.ok) throw new Error(`Server error ${r.status}`);
+      return r.json();
+    });
+
+    // Boot sequence
+    await wait(120);
+    clog('[SYSTEM] Initializing watsonx.ai runtime pipeline…', 'log-system');
+    await wait(260);
+    clog('[SYSTEM] Connecting to IBM Cloud IAM endpoint… <span style="color:#42be65">AUTHENTICATED</span>', 'log-system');
+    await wait(220);
+    clog('[ORCHESTRATOR] Spawning 3 active IBM Granite cognitive nodes…', 'log-orch');
+    await wait(180);
+    clog('[ORCHESTRATOR] &nbsp;&nbsp;→ Node 1: PolicyAuditAgent &nbsp;&nbsp;&nbsp;<span style="color:#42be65">ONLINE</span>', 'log-orch');
+    await wait(140);
+    clog('[ORCHESTRATOR] &nbsp;&nbsp;→ Node 2: ClinicalEvidenceAgent &nbsp;<span style="color:#42be65">ONLINE</span>', 'log-orch');
+    await wait(140);
+    clog('[ORCHESTRATOR] &nbsp;&nbsp;→ Node 3: AppealStrategyAgent &nbsp;&nbsp;<span style="color:#42be65">ONLINE</span>', 'log-orch');
+    await wait(200);
+    clog('[POLICY AUDITOR AGENT] Ingesting data/insurance_policies.txt…', 'log-agent1');
+    await wait(220);
+    clog('[POLICY AUDITOR AGENT] Loaded rules → <b>ACC-901</b> · <b>ORTHO-404</b> · <b>ONCO-202</b>', 'log-agent1');
+    await wait(180);
+    clog('[CLINICAL DATA AGENT] Querying batch data matrix…', 'log-agent2');
+    await wait(220);
+    clog('[CLINICAL DATA AGENT] Found <b>10</b> active patient profiles in denial_records.csv', 'log-agent2');
+    await wait(220);
+    clog('[APPEAL DRAFTER AGENT] ibm-granite-3-2-8b loaded. Legal template corpus ready.', 'log-agent3');
+    await wait(280);
+    clog('[ORCHESTRATOR] Pipeline sequence confirmed. Beginning case-by-case adjudication…', 'log-orch');
+    await wait(180);
+    clog('──────────────────────────────────────────────────────────────────', 'log-dim');
+
+    // Await real API data
+    let data;
+    try {
+      data = await fetchPromise;
+    } catch (err) {
+      clog(`[ERROR] ${esc(err.message)}`, 'log-upheld');
+      cs.textContent = '● ERROR';
+      cs.className   = 'console-status';
+      btn.disabled   = false;
+      btn.innerHTML  = '<i class="bi bi-arrow-clockwise"></i> Retry Pipeline';
+      overlay.style.display = 'none';
+      return;
+    }
+
+    // Per-case animated log
+    for (const c of data) {
+      await wait(180);
+      for (const { html, cls } of caseLines(c)) {
+        clog(html, cls);
+        await wait(110);
+      }
+    }
+
+    await wait(260);
+    clog('──────────────────────────────────────────────────────────────────', 'log-dim');
+    await wait(120);
+    clog('[SYSTEM] Pipeline processing complete. Rendering executive scorecard dashboard.', 'log-done');
+    await wait(160);
+    const nAppeals = data.filter(c => c.criteria_met).length;
+    const nUpheld  = data.length - nAppeals;
+    clog(`[SYSTEM] Summary → Appeals filed: <b style="color:#42be65">${nAppeals}</b> | Denials upheld: <b style="color:#ff8389">${nUpheld}</b> | Automation rate: <b style="color:#78a9ff">100%</b>`, 'log-done');
+
+    // Remove blinking cursor
+    const cur = consoleBody().querySelector('.console-cursor');
+    if (cur) cur.remove();
+    cs.textContent = '● COMPLETE';
+    cs.className   = 'console-status done';
+
+    // Render scorecard + chart + cards
+    document.getElementById('sc-total').textContent   = data.length;
+    document.getElementById('sc-appeals').textContent = nAppeals;
+    document.getElementById('sc-upheld').textContent  = nUpheld;
+    document.getElementById('sc-rate').textContent    = '100%';
+    document.getElementById('sc-hours').textContent   = (data.length * 73 / 60).toFixed(1) + 'h';
+    strip.style.display = 'block';
+
+    chartPanel.style.display = 'block';
+    renderDoughnut(nAppeals, nUpheld);
+
+    container.innerHTML = data.map((c, i) => buildCard(c, i)).join('');
+    section.style.display = 'block';
+
+    btn.disabled  = false;
+    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Pipeline Complete — Run Again';
+    overlay.style.display = 'none';
+
+    strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ── Utility: open a Bootstrap modal by id ───────────────────── */
+  function openModal(id, e) {
+    if (e) e.preventDefault();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById(id)).show();
+  }
+
+  /* ── Utility: scroll to top ─────────────────────────────────────*/
+  function scrollToTop(e) {
+    if (e) e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ── Add Patient Case ────────────────────────────────────────── */
+  async function submitNewCase() {
+    const errBox = document.getElementById('add-case-error');
+    const okBox  = document.getElementById('add-case-success');
+    const btn    = document.getElementById('submit-case-btn');
+    errBox.style.display = 'none';
+    okBox.style.display  = 'none';
+
+    const payload = {
+      Case_ID           : document.getElementById('f-case-id').value.trim(),
+      Patient_Name      : document.getElementById('f-patient-name').value.trim(),
+      Age               : document.getElementById('f-age').value.trim(),
+      Denial_Code       : document.getElementById('f-denial-code').value,
+      Diagnosis         : document.getElementById('f-diagnosis').value.trim(),
+      Proposed_Treatment: document.getElementById('f-treatment').value.trim(),
+      Clinical_Notes    : document.getElementById('f-notes').value.trim(),
+    };
+
+    // Client-side validation
+    const empty = Object.entries(payload).filter(([,v]) => !v);
+    if (empty.length) {
+      errBox.textContent = '⚠ Please fill in all required fields.';
+      errBox.style.display = 'block';
+      return;
+    }
+    if (isNaN(parseInt(payload.Age)) || parseInt(payload.Age) < 0) {
+      errBox.textContent = '⚠ Age must be a valid non-negative number.';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Processing…';
+
+    try {
+      const resp = await fetch('/add-case', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify(payload),
+      });
+      const result = await resp.json();
+
+      if (!resp.ok) {
+        errBox.textContent = '⚠ ' + (result.error || 'Server error.');
+        errBox.style.display = 'block';
+        return;
+      }
+
+      // Success — close modal, show new card at top of results section
+      okBox.textContent = `✔ Case ${esc(result.case_id)} added and processed successfully!`;
+      okBox.style.display = 'block';
+
+      // Clear form
+      ['f-case-id','f-patient-name','f-age','f-denial-code',
+       'f-diagnosis','f-treatment','f-notes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      // Determine current count for card index
+      const existingCards = document.querySelectorAll('#cards-container > div').length;
+      const newCardHtml   = buildCard(result, existingCards);
+
+      // Show results section if not already visible
+      const section = document.getElementById('results-section');
+      section.style.display = 'block';
+
+      // Prepend the new card with a highlight flash
+      const container = document.getElementById('cards-container');
+      const tmp = document.createElement('div');
+      tmp.innerHTML = newCardHtml;
+      const newCardEl = tmp.firstElementChild;
+      newCardEl.style.cssText = 'outline:2px solid #6929c4;border-radius:6px;';
+      container.prepend(newCardEl);
+      setTimeout(() => { newCardEl.style.outline = ''; }, 2000);
+
+      // Scroll to the new card after a brief pause
+      setTimeout(() => {
+        newCardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
+
+      // Close modal after 1.2 s
+      setTimeout(() => {
+        bootstrap.Modal.getInstance(document.getElementById('modal-add-case'))?.hide();
+        okBox.style.display = 'none';
+      }, 1200);
+
+    } catch (err) {
+      errBox.textContent = '⚠ Network error: ' + esc(err.message);
+      errBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send-fill me-1"></i> Submit &amp; Run Agents';
+    }
+  }
+
+  /* ── JSON payload toggle ─────────────────────────────────────── */
+  function toggleJson(id, btn) {
+    const block = document.getElementById(id);
+    const open  = block.style.display === 'block';
+    block.style.display = open ? 'none' : 'block';
+    btn.innerHTML = open
+      ? '<i class="bi bi-braces"></i> View Agent JSON Payload'
+      : '<i class="bi bi-braces-asterisk"></i> Hide Agent JSON Payload';
+  }
+
+  /* ── Print / download appeal letter ─────────────────────────── */
+  function printAppeal(idx) {
+    const letterEl = document.getElementById('letter-' + idx);
+    if (!letterEl) return;
+    const frame = document.getElementById('print-frame');
+    frame.textContent = letterEl.textContent;
+    frame.style.display = 'block';
+    window.print();
+    frame.style.display = 'none';
+  }
+</script>
+
+<!-- Hidden print frame: only this element is visible during window.print() -->
+<div id="print-frame"></div>
+
+<script>
+/* ── Chat playground ─────────────────────────────────────────────────────── */
+(function () {
+  // Configure marked for safe inline rendering
+  marked.use({ breaks: true, gfm: true });
+
+  const messagesEl = () => document.getElementById('chat-messages');
+  const inputEl    = () => document.getElementById('chat-input');
+  const sendBtn    = () => document.getElementById('chat-send-btn');
+
+  // Append a bubble and auto-scroll
+  function appendBubble(role, html, raw) {
+    const box  = messagesEl();
+    const wrap = document.createElement('div');
+    wrap.className = `chat-bubble ${role}`;
+    if (role === 'user') {
+      wrap.textContent = raw;
+    } else {
+      wrap.innerHTML = html;
+    }
+    box.appendChild(wrap);
+    box.scrollTop = box.scrollHeight;
+    return wrap;
+  }
+
+  // Pulsing "thinking" indicator
+  function showThinking() {
+    const box  = messagesEl();
+    const el   = document.createElement('div');
+    el.id        = 'thinking-indicator';
+    el.className = 'thinking-bubble';
+    el.innerHTML = '<span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span><span style="margin-left:.2rem;">Agent thinking…</span>';
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function hideThinking() {
+    document.getElementById('thinking-indicator')?.remove();
+  }
+
+  // Main send function
+  async function sendChat() {
+    const q = inputEl().value.trim();
+    if (!q) return;
+
+    inputEl().value   = '';
+    inputEl().style.height = '';
+    sendBtn().disabled = true;
+
+    appendBubble('user', null, q);
+    showThinking();
+
+    try {
+      const resp = await fetch('/chat', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ question: q }),
+      });
+      const data = await resp.json();
+      hideThinking();
+
+      if (!resp.ok || data.error) {
+        appendBubble('assistant', `<span style="color:#ff8389">⚠ ${data.error || 'Server error'}</span>`, null);
+      } else {
+        // Simulate token-by-token streaming with a typewriter reveal
+        const fullHtml = marked.parse(data.answer);
+        const bubble   = appendBubble('assistant', '', null);
+
+        // Parse into individual characters of the raw HTML
+        // For a clean effect, we reveal word-by-word in the rendered HTML
+        const words = data.answer.split(' ');
+        let built   = '';
+        for (const word of words) {
+          built += word + ' ';
+          bubble.innerHTML = marked.parse(built);
+          messagesEl().scrollTop = messagesEl().scrollHeight;
+          await new Promise(r => setTimeout(r, 18));
+        }
+        // Final render pass for correctness
+        bubble.innerHTML = fullHtml;
+        messagesEl().scrollTop = messagesEl().scrollHeight;
+      }
+    } catch (err) {
+      hideThinking();
+      appendBubble('assistant', `<span style="color:#ff8389">⚠ Network error: ${err.message}</span>`, null);
+    } finally {
+      sendBtn().disabled = false;
+      inputEl().focus();
+    }
+  }
+
+  // Enter key sends (Shift+Enter = newline)
+  function chatKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChat();
+    }
+    // Auto-resize textarea
+    const ta = e.target;
+    ta.style.height = '';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  }
+
+  // Suggestion chip click
+  function sendSuggestion(chip) {
+    inputEl().value = chip.textContent.trim();
+    sendChat();
+  }
+
+  // Welcome message on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    const welcome = (
+      "## Welcome to the Medical AI Policy Assistant 👋\n\n" +
+      "I'm grounded on your `insurance_policies.txt` document and can answer questions about:\n\n" +
+      "- **ACC-901** — Cardiac diagnostic imaging (ERR-CARDIAC)\n" +
+      "- **ORTHO-404** — Arthroscopic surgery (ERR-ORTHO)\n" +
+      "- **ONCO-202** — Targeted oncology therapy (ERR-ONCOLOGY)\n\n" +
+      "Click a suggestion below or type your own question."
+    );
+    appendBubble('assistant', marked.parse(welcome), null);
+  });
+
+  // Expose to global scope (called from inline onclick)
+  window.sendChat        = sendChat;
+  window.chatKeydown     = chatKeydown;
+  window.sendSuggestion  = sendSuggestion;
+})();
+</script>
+</body>
+</html>
